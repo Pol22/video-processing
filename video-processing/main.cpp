@@ -59,8 +59,9 @@ int main(int argc, const char** argv)
 			points[j] = next_point;
 		}
 
+
 		imshow("frame", frame);
-		waitKey(1000);
+		waitKey(500);
 	}
 
 	cvDestroyAllWindows();
