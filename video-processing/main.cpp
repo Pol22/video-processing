@@ -2,10 +2,6 @@
 #include <opencv2\opencv.hpp>
 
 
-#include "opencv2/opencv.hpp"
-#include <chrono>
-
-
 using namespace cv;
 using namespace std;
 
