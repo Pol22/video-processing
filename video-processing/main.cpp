@@ -1,11 +1,10 @@
 #include <iostream>
-<<<<<<< HEAD
 #include <opencv2\opencv.hpp>
 
-=======
+
 #include "opencv2/opencv.hpp"
 #include <chrono>
->>>>>>> fc58daceaaab6862eb4e4b48c05e923f10a735b4
+
 
 using namespace cv;
 using namespace std;
