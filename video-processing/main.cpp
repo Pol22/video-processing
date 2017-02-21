@@ -16,9 +16,12 @@ int main(int argc, const char** argv)
 	Mat frame(height, width, CV_8UC3, Scalar(255, 255, 255));
 
 	vector<Point> points;
+	vector<double> last_angle;
+
 	for (int k = 0; k < number_of_targets; k++)
 	{
 		points.emplace_back(rand() % width, rand() % height);
+		last_angle.push_back(0.0);
 	}
 	
     int number_of_noise_points = 100;
@@ -27,11 +30,13 @@ int main(int argc, const char** argv)
 	{
 		
         frame = Scalar(255, 255, 255);
+
         for (int p = 0; p < number_of_noise_points; p++)
         {
             Point noise_point(rand() % width, rand() % height);
             putText(frame, "+", noise_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0));
         }
+
 		for (int j = 0; j < number_of_targets; j++)
 		{
 			//circle(frame, points[j], 2, Scalar(0, 255, 0), 2);
@@ -39,8 +44,11 @@ int main(int argc, const char** argv)
 			putText(frame, "+", text_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255));
 			int length_of_step = rand() % 30 + 1;
             double angle = ((rand() % 181) - 90) / 45.0 * atan(1.0);
-			int next_x = points[j].x + length_of_step * cos(angle);
-			int next_y = points[j].y + length_of_step * sin(angle);
+			double sum_angle = last_angle[j] + angle;
+			last_angle[j] = sum_angle;
+
+			int next_x = points[j].x + length_of_step * cos(sum_angle);
+			int next_y = points[j].y + length_of_step * sin(sum_angle);
 
 			if (next_x < 0)
 				next_x = -next_x;
