@@ -6,9 +6,12 @@ using namespace cv;
 using namespace std;
 
 
-void get_good_points(vector<Point> input_points, vector<Point> output_points)
+void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 {
-
+	for (int i = 0; i < input_points.size() / 2; i++)
+	{
+		output_points.push_back(input_points[i]);
+	}
 }
 
 
@@ -45,13 +48,17 @@ int main(int argc, const char** argv)
 
 			all_points.push_back(noise_point);
 
-            putText(frame, "+", noise_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0));
+			Point text_point(noise_point.x - 13, noise_point.y + 9);
+
+            putText(frame, "+", text_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0));
         }
 
 		for (int j = 0; j < number_of_targets; j++)
 		{
 			//circle(frame, points[j], 2, Scalar(0, 255, 0), 2);
 			Point text_point(points[j].x - 13, points[j].y + 9);
+
+			//Point text_point(points[j].x, points[j].y);
 			putText(frame, "+", text_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255));
 			int length_of_step = rand() % 30 + 1;
             double angle = ((rand() % 181) - 90) / 45.0 * atan(1.0);
@@ -88,9 +95,14 @@ int main(int argc, const char** argv)
 		// need to implement
 		get_good_points(all_points, good_points);
 
+		for (int k = 0; k < good_points.size(); k++)
+		{
+			circle(frame, good_points[k], 2, Scalar(0, 255, 0), 2);
+		}
+
 
 		imshow("frame", frame);
-        waitKey(50);
+        waitKey(1000);
 	}
 
 	cvDestroyAllWindows();
