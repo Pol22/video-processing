@@ -6,6 +6,12 @@ using namespace cv;
 using namespace std;
 
 
+void get_good_points(vector<Point> input_points, vector<Point> output_points)
+{
+
+}
+
+
 int main(int argc, const char** argv)
 {
 	srand(time(NULL));
@@ -17,6 +23,7 @@ int main(int argc, const char** argv)
 
 	vector<Point> points;
 	vector<double> last_angle;
+	vector<Point> all_points;
 
 	for (int k = 0; k < number_of_targets; k++)
 	{
@@ -26,14 +33,18 @@ int main(int argc, const char** argv)
 	
     int number_of_noise_points = 100;
 
+
 	for (int i = 0; i < number_of_frames; i++)
 	{
-		
+		all_points.clear();
         frame = Scalar(255, 255, 255);
 
         for (int p = 0; p < number_of_noise_points; p++)
         {
             Point noise_point(rand() % width, rand() % height);
+
+			all_points.push_back(noise_point);
+
             putText(frame, "+", noise_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0));
         }
 
@@ -64,8 +75,18 @@ int main(int argc, const char** argv)
 			text_point.y = next_y + 9;
             //putText(frame, "+", text_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255));
             //line(frame, points[j], next_point, Scalar(0, 0, 255), 1);
+
+			all_points.push_back(points[j]);
+
 			points[j] = next_point;
 		}
+
+		vector<Point> good_points;
+		// shuffle vector with all points
+		random_shuffle(all_points.begin(), all_points.end());
+
+		// need to implement
+		get_good_points(all_points, good_points);
 
 
 		imshow("frame", frame);
