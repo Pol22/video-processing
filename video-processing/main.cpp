@@ -1,4 +1,5 @@
 #include <iostream>
+#include <numeric>
 #include "opencv2/opencv.hpp"
 
 
@@ -6,11 +7,92 @@ using namespace cv;
 using namespace std;
 
 
+deque<deque<Point>> trajectory;
+deque<deque<bool>> tag;
+deque<bool> followed_trajectory;
+int M = 7;
+int K = 4;
+int N = 10;
+
+
 void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 {
-	for (int i = 0; i < input_points.size() / 2; i++)
+	
+	set<int> employment_indexes; // for 5
+	// 2
+	for (int i = 0; i < trajectory.size(); i++)
 	{
-		output_points.push_back(input_points[i]);
+		Point nearest_point;
+		double min_distance = sqrt(1280 * 1280 + 720 * 720); // frame diagonal
+		int index_in_input = 0;
+
+		for (int j = 0; j < input_points.size(); j++)
+		{
+			double dist = norm(input_points[j] - trajectory[i].back());
+			if (dist < min_distance)
+			{
+				min_distance = dist;
+				nearest_point = input_points[j];
+				index_in_input = j;
+			}
+		}
+
+		if (min_distance > 30)
+		{
+			tag[i].push_back(false);
+			trajectory[i].push_back(trajectory[i].back());
+		}
+		else
+		{
+			tag[i].push_back(true);
+			trajectory[i].push_back(nearest_point);
+			employment_indexes.insert(index_in_input);
+		}
+
+		// save last N points
+		if (tag[i].size() > N)
+		{
+			tag[i].pop_front();
+			trajectory[i].pop_front();
+		}
+
+		// 3
+		if (tag[i].size() == N)
+		{
+			int number_of_not_empty_points = std::accumulate(tag[i].begin(), tag[i].end(), 0);
+
+			if (number_of_not_empty_points >= M && tag[i].back() == true)
+			{
+				followed_trajectory[i] = true;
+				output_points.push_back(trajectory[i].back());
+			}
+			// 4
+			if (number_of_not_empty_points < K)
+			{
+				followed_trajectory.erase(followed_trajectory.begin() + i);
+				trajectory.erase(trajectory.begin() + i);
+				tag.erase(tag.begin() + i);
+			}
+		}
+	}
+
+	// 5 and 1
+		
+	for (int p = 0; p < input_points.size(); p++)
+	{
+		auto finded = employment_indexes.find(p);
+		if (finded == employment_indexes.end())
+		{
+			deque<Point> _deque;
+			_deque.push_back(input_points[p]);
+			trajectory.push_back(_deque);
+
+			deque<bool> _tag;
+			_tag.push_back(true);
+			tag.push_back(_tag);
+
+			followed_trajectory.push_back(false);
+		}
 	}
 }
 
@@ -19,7 +101,6 @@ int main(int argc, const char** argv)
 {
 	srand(time(NULL));
 	int number_of_targets = 30;
-    int number_of_frames = 200;
 	int width = 1280;
 	int height = 720;
 	Mat frame(height, width, CV_8UC3, Scalar(255, 255, 255));
@@ -37,7 +118,7 @@ int main(int argc, const char** argv)
     int number_of_noise_points = 100;
 
 
-	for (int i = 0; i < number_of_frames; i++)
+	while(1 > 0)
 	{
 		all_points.clear();
         frame = Scalar(255, 255, 255);
@@ -88,21 +169,24 @@ int main(int argc, const char** argv)
 			points[j] = next_point;
 		}
 
-		vector<Point> good_points;
 		// shuffle vector with all points
 		random_shuffle(all_points.begin(), all_points.end());
 
+		vector<Point> good_points;
 		// need to implement
 		get_good_points(all_points, good_points);
 
 		for (int k = 0; k < good_points.size(); k++)
 		{
-			circle(frame, good_points[k], 2, Scalar(0, 255, 0), 2);
+			circle(frame, good_points[k], 10, Scalar(0, 255, 0), 2);
 		}
 
 
 		imshow("frame", frame);
-        waitKey(1000);
+
+        int key = waitKey(1);
+		if (key == 27)
+			break;
 	}
 
 	cvDestroyAllWindows();
