@@ -7,28 +7,32 @@ using namespace cv;
 using namespace std;
 
 
-deque<deque<Point>> trajectory;
-deque<deque<bool>> tag;
-deque<bool> followed_trajectory;
-int M = 7;
-int K = 4;
-int N = 10;
+list<Point> trajectory;
+list<deque<bool>> tag;
+list<bool> followed_trajectory;
+int M = 3;
+int K = 2;
+int N = 5;
 
 
 void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 {
-	
 	set<int> employment_indexes; // for 5
 	// 2
-	for (int i = 0; i < trajectory.size(); i++)
+	auto iter_traject = trajectory.begin();
+	auto iter_tag = tag.begin();
+	auto iter_follow = followed_trajectory.begin();
+
+	for ( ; iter_traject != trajectory.end(); )
 	{
 		Point nearest_point;
-		double min_distance = sqrt(1280 * 1280 + 720 * 720); // frame diagonal
+		double min_distance = 31;
 		int index_in_input = 0;
 
 		for (int j = 0; j < input_points.size(); j++)
 		{
-			double dist = norm(input_points[j] - trajectory[i].back());
+			
+			double dist = norm(input_points[j] - *iter_traject);
 			if (dist < min_distance)
 			{
 				min_distance = dist;
@@ -39,39 +43,43 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 
 		if (min_distance > 30)
 		{
-			tag[i].push_back(false);
-			trajectory[i].push_back(trajectory[i].back());
+			iter_tag->push_back(false);
 		}
 		else
 		{
-			tag[i].push_back(true);
-			trajectory[i].push_back(nearest_point);
+			iter_tag->push_back(true);
+			*iter_traject = nearest_point;
 			employment_indexes.insert(index_in_input);
 		}
 
 		// save last N points
-		if (tag[i].size() > N)
+		if (iter_tag->size() > N)
 		{
-			tag[i].pop_front();
-			trajectory[i].pop_front();
+			iter_tag->pop_front();
 		}
 
 		// 3
-		if (tag[i].size() == N)
+		if (iter_tag->size() == N)
 		{
-			int number_of_not_empty_points = std::accumulate(tag[i].begin(), tag[i].end(), 0);
+			int number_of_not_empty_points = std::accumulate(iter_tag->begin(), iter_tag->end(), 0);
 
-			if (number_of_not_empty_points >= M && tag[i].back() == true)
+			if (number_of_not_empty_points >= M && iter_tag->back() == true)
 			{
-				followed_trajectory[i] = true;
-				output_points.push_back(trajectory[i].back());
+				*iter_follow = true;
+				output_points.push_back(*iter_traject);
 			}
 			// 4
 			if (number_of_not_empty_points < K)
 			{
-				followed_trajectory.erase(followed_trajectory.begin() + i);
-				trajectory.erase(trajectory.begin() + i);
-				tag.erase(tag.begin() + i);
+				iter_follow = followed_trajectory.erase(iter_follow);
+				iter_traject = trajectory.erase(iter_traject);
+				iter_tag = tag.erase(iter_tag);
+			}
+			else
+			{
+				iter_traject++;
+				iter_tag++;
+				iter_follow++;
 			}
 		}
 	}
@@ -83,9 +91,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 		auto finded = employment_indexes.find(p);
 		if (finded == employment_indexes.end())
 		{
-			deque<Point> _deque;
-			_deque.push_back(input_points[p]);
-			trajectory.push_back(_deque);
+			trajectory.push_back(input_points[p]);
 
 			deque<bool> _tag;
 			_tag.push_back(true);
