@@ -187,12 +187,12 @@ int main(int argc, const char** argv)
 			circle(frame, good_points[k], 10, Scalar(0, 255, 0), 2);
 		}
 
+        char key = waitKey(40);
 
-		imshow("frame", frame);
-
-        int key = waitKey(1);
 		if (key == 27)
 			break;
+
+        imshow("frame", frame);
 	}
 
 	cvDestroyAllWindows();
