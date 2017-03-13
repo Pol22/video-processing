@@ -35,7 +35,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 		{
 			
 			double dist = norm(input_points[j] - *iter_traject);
-			if (dist < min_distance)
+			if (dist < min_distance && employment_indexes.find(j) == employment_indexes.end())
 			{
 				min_distance = dist;
 				nearest_point = input_points[j];
@@ -43,7 +43,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 			}
 		}
 
-		if (min_distance > 30 || employment_indexes.find(index_in_input) != employment_indexes.end())
+		if (min_distance > 30)
 		{
 			iter_tag->push_back(false);
 		}
