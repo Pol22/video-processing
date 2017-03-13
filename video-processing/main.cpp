@@ -9,6 +9,7 @@ using namespace std;
 
 list<Point> trajectory;
 list<Point> predict_points;
+list<Point> previous_points;
 list<deque<bool>> tag;
 list<bool> followed_trajectory;
 int M = 4;
@@ -18,12 +19,14 @@ int N = 5;
 
 void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 {
-	output_points.clear();
+
 	set<int> employment_indexes; // for 5
 	// 2
 	auto iter_traject = trajectory.begin();
 	auto iter_tag = tag.begin();
 	auto iter_follow = followed_trajectory.begin();
+	auto iter_prev = previous_points.begin();
+	auto iter_predict = predict_points.begin();
 
 	for ( ; iter_traject != trajectory.end(); )
 	{
@@ -34,7 +37,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 		for (int j = 0; j < input_points.size(); j++)
 		{
 			
-			double dist = norm(input_points[j] - *iter_traject);
+			double dist = norm(input_points[j] - *iter_predict);
 			if (dist < min_distance && employment_indexes.find(j) == employment_indexes.end())
 			{
 				min_distance = dist;
@@ -50,7 +53,16 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 		else
 		{
 			iter_tag->push_back(true);
+			// prediction
+			*iter_prev = *iter_traject;
 			*iter_traject = nearest_point;
+			double dist_predict= norm(*iter_prev - *iter_traject);
+			double koef_line = double(iter_traject->y - iter_prev->y) / (iter_traject->x - iter_prev->x);
+			double alpha = atan(koef_line);
+
+			iter_predict->x = iter_traject->x + dist_predict / 2 * cos(alpha);
+			iter_predict->y = iter_traject->y + dist_predict / 2 * sin(alpha);
+
 			employment_indexes.insert(index_in_input);
 		}
 
@@ -75,13 +87,17 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 			{
 				iter_follow = followed_trajectory.erase(iter_follow);
 				iter_traject = trajectory.erase(iter_traject);
-				iter_tag = tag.erase(iter_tag);
+				iter_tag = tag.erase(iter_tag); 
+				iter_prev = previous_points.erase(iter_prev);
+				iter_predict = predict_points.erase(iter_predict);
 			}
 			else
 			{
 				iter_traject++;
 				iter_tag++;
 				iter_follow++;
+				iter_prev++;
+				iter_predict++;
 			}
 		}
 		else
@@ -89,6 +105,8 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 			iter_traject++;
 			iter_tag++;
 			iter_follow++;
+			iter_prev++;
+			iter_predict++;
 		}
 	}
 
@@ -100,6 +118,8 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 		if (finded == employment_indexes.end())
 		{
 			trajectory.push_back(input_points[p]);
+			previous_points.push_back(input_points[p]);
+			predict_points.push_back(input_points[p]);
 
 			deque<bool> _tag;
 			_tag.push_back(true);
@@ -119,7 +139,7 @@ int main(int argc, const char** argv)
 	int height = 720;
 	Mat frame(height, width, CV_8UC3, Scalar(255, 255, 255));
 	// error
-	string errors_file("errors.txt");
+	string errors_file("errors1.txt");
 	ofstream err;
 	err.open(errors_file);
 
