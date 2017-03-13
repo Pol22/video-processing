@@ -10,13 +10,14 @@ using namespace std;
 list<Point> trajectory;
 list<deque<bool>> tag;
 list<bool> followed_trajectory;
-int M = 3;
-int K = 2;
+int M = 4;
+int K = 3;
 int N = 5;
 
 
 void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 {
+	output_points.clear();
 	set<int> employment_indexes; // for 5
 	// 2
 	auto iter_traject = trajectory.begin();
@@ -41,7 +42,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 			}
 		}
 
-		if (min_distance > 30)
+		if (min_distance > 30 || employment_indexes.find(index_in_input) != employment_indexes.end())
 		{
 			iter_tag->push_back(false);
 		}
@@ -57,7 +58,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 		{
 			iter_tag->pop_front();
 		}
-
+		
 		// 3
 		if (iter_tag->size() == N)
 		{
@@ -81,6 +82,12 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 				iter_tag++;
 				iter_follow++;
 			}
+		}
+		else
+		{
+			iter_traject++;
+			iter_tag++;
+			iter_follow++;
 		}
 	}
 
@@ -110,8 +117,14 @@ int main(int argc, const char** argv)
 	int width = 1280;
 	int height = 720;
 	Mat frame(height, width, CV_8UC3, Scalar(255, 255, 255));
+	// error
+	string errors_file("errors.txt");
+	ofstream err;
+	err.open(errors_file);
 
 	vector<Point> points;
+	vector<Point> good_points;
+	vector<Point> good_points_out;
 	vector<double> last_angle;
 	vector<Point> all_points;
 
@@ -124,9 +137,11 @@ int main(int argc, const char** argv)
     int number_of_noise_points = 100;
 
 
-	while(1 > 0)
+	for(int i = 0; ;i++)
 	{
+		good_points.clear();
 		all_points.clear();
+		good_points_out.clear();
         frame = Scalar(255, 255, 255);
 
         for (int p = 0; p < number_of_noise_points; p++)
@@ -171,28 +186,38 @@ int main(int argc, const char** argv)
             //line(frame, points[j], next_point, Scalar(0, 0, 255), 1);
 
 			all_points.push_back(points[j]);
-
+			good_points.push_back(points[j]);
 			points[j] = next_point;
 		}
 
 		// shuffle vector with all points
 		random_shuffle(all_points.begin(), all_points.end());
 
-		vector<Point> good_points;
-		// need to implement
-		get_good_points(all_points, good_points);
+		// implemented
+		get_good_points(all_points, good_points_out);
 
-		for (int k = 0; k < good_points.size(); k++)
+		// errors
+		int num_good_points_out = 0;
+		int num_noise_points_out = 0;
+		
+		for (int k = 0; k < good_points_out.size(); k++)
 		{
-			circle(frame, good_points[k], 10, Scalar(0, 255, 0), 2);
+			circle(frame, good_points_out[k], 10, Scalar(0, 255, 0), 2);
+			if (find(good_points.begin(), good_points.end(), good_points_out[k]) == good_points.end())
+				num_noise_points_out++;
+			else
+				num_good_points_out++;
 		}
-
+		err << i << " " << double(number_of_targets - num_good_points_out) / number_of_targets << " " << double(num_noise_points_out) / number_of_noise_points << endl;
 
 		imshow("frame", frame);
 
         int key = waitKey(1);
 		if (key == 27)
+		{
 			break;
+			err.close();
+		}
 	}
 
 	cvDestroyAllWindows();
