@@ -8,6 +8,7 @@ using namespace std;
 
 
 list<Point> trajectory;
+list<Point> predict_points;
 list<deque<bool>> tag;
 list<bool> followed_trajectory;
 int M = 4;
@@ -208,16 +209,18 @@ int main(int argc, const char** argv)
 			else
 				num_good_points_out++;
 		}
-		err << i << " " << double(number_of_targets - num_good_points_out) / number_of_targets << " " << double(num_noise_points_out) / number_of_noise_points << endl;
 
-		imshow("frame", frame);
+		err << i << " " << double(number_of_targets - num_good_points_out) / number_of_targets;
+		err << " " << double(num_noise_points_out) / number_of_noise_points << endl;
 
-        int key = waitKey(1);
+
+		char key = waitKey(40);
 		if (key == 27)
 		{
 			break;
 			err.close();
 		}
+		imshow("frame", frame);
 	}
 
 	cvDestroyAllWindows();
