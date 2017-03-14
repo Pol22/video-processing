@@ -1,4 +1,4 @@
-#include <iostream>
+#include <fstream>
 #include <numeric>
 #include "opencv2/opencv.hpp"
 
@@ -234,7 +234,7 @@ int main(int argc, const char** argv)
 		err << " " << double(num_noise_points_out) / number_of_noise_points << endl;
 
 
-		char key = waitKey(40);
+        char key = waitKey(1);
 		if (key == 27)
 		{
 			break;
