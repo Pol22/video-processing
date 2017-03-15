@@ -2,10 +2,22 @@
 #include <numeric>
 #include "opencv2/opencv.hpp"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 
 using namespace cv;
 using namespace std;
 
+// rand from -1 to 1
+double random()
+{
+	return double(rand()) / RAND_MAX;
+}
+
+// params model
+double v0 = 10.0;
+double r0 = 5.0;
 
 list<Point> trajectory;
 list<Point> predict_points;
@@ -31,7 +43,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 	for ( ; iter_traject != trajectory.end(); )
 	{
 		Point nearest_point;
-		double min_distance = 31;
+		double min_distance = 30 + 1;
 		int index_in_input = 0;
 
 		for (int j = 0; j < input_points.size(); j++)
@@ -139,20 +151,27 @@ int main(int argc, const char** argv)
 	int height = 720;
 	Mat frame(height, width, CV_8UC3, Scalar(255, 255, 255));
 	// error
-	string errors_file("errors1.txt");
+	string errors_file("errors1.txt"); // error file
 	ofstream err;
 	err.open(errors_file);
-
+	
 	vector<Point> points;
+	vector<double> vx;
+	vector<double> vy;
 	vector<Point> good_points;
 	vector<Point> good_points_out;
-	vector<double> last_angle;
+	// vector<double> last_angle;
 	vector<Point> all_points;
+
 
 	for (int k = 0; k < number_of_targets; k++)
 	{
 		points.emplace_back(rand() % width, rand() % height);
-		last_angle.push_back(0.0);
+		double r = v0 * random();
+		double fi = 2 * M_PI * random();
+		vx.push_back(r * cos(fi));
+		vy.push_back(r * sin(fi));
+		// last_angle.push_back(0.0);
 	}
 	
     int number_of_noise_points = 100;
@@ -183,13 +202,22 @@ int main(int argc, const char** argv)
 
 			//Point text_point(points[j].x, points[j].y);
 			putText(frame, "+", text_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255));
-			int length_of_step = rand() % 30 + 1;
-            double angle = ((rand() % 181) - 90) / 45.0 * atan(1.0);
-			double sum_angle = last_angle[j] + angle;
-			last_angle[j] = sum_angle;
+			//int length_of_step = rand() % 30 + 1;
+            //double angle = ((rand() % 181) - 90) / 45.0 * atan(1.0);
+			//double sum_angle = last_angle[j] + angle;
+			//last_angle[j] = sum_angle;
 
-			int next_x = points[j].x + length_of_step * cos(sum_angle);
-			int next_y = points[j].y + length_of_step * sin(sum_angle);
+			//int next_x = points[j].x + length_of_step * cos(sum_angle);
+			//int next_y = points[j].y + length_of_step * sin(sum_angle);
+
+			int next_x = points[j].x + vx[j];
+			int next_y = points[j].y + vy[j];
+			
+			double r = r0 * random();
+			double fi = 2 * M_PI * random();
+			
+			vx[j] = vx[j] + r * cos(fi);
+			vy[j] = vy[j] + r * sin(fi);
 
 			if (next_x < 0)
 				next_x = -next_x;
@@ -208,6 +236,7 @@ int main(int argc, const char** argv)
 
 			all_points.push_back(points[j]);
 			good_points.push_back(points[j]);
+			// next point
 			points[j] = next_point;
 		}
 
@@ -216,7 +245,7 @@ int main(int argc, const char** argv)
 
 		// implemented
 		get_good_points(all_points, good_points_out);
-
+		
 		// errors
 		int num_good_points_out = 0;
 		int num_noise_points_out = 0;
