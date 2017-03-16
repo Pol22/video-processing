@@ -10,14 +10,15 @@ using namespace cv;
 using namespace std;
 
 // rand from -1 to 1
-double random()
+double Random()
 {
 	return double(rand()) / RAND_MAX;
 }
 
 // params model
-double v0 = 10.0;
+double vmax = 30.0;
 double r0 = 5.0;
+double changeProb = 0.1;
 
 list<Point> trajectory;
 list<Point> predict_points;
@@ -167,11 +168,12 @@ int main(int argc, const char** argv)
 	for (int k = 0; k < number_of_targets; k++)
 	{
 		points.emplace_back(rand() % width, rand() % height);
-		double r = v0 * random();
-		double fi = 2 * M_PI * random();
+        double r = vmax * Random();
+        double fi = 2 * M_PI * Random();
 		vx.push_back(r * cos(fi));
 		vy.push_back(r * sin(fi));
 		// last_angle.push_back(0.0);
+        //printf("[%g,%g]",r,fi);
 	}
 	
     int number_of_noise_points = 100;
@@ -213,20 +215,43 @@ int main(int argc, const char** argv)
 			int next_x = points[j].x + vx[j];
 			int next_y = points[j].y + vy[j];
 			
-			double r = r0 * random();
-			double fi = 2 * M_PI * random();
-			
-			vx[j] = vx[j] + r * cos(fi);
-			vy[j] = vy[j] + r * sin(fi);
+            //printf("[%g,%g]",vx[j],vy[j]);
+
+            if(Random() < changeProb)
+            {
+                double r = r0 * Random();
+                double fi = 2 * M_PI * Random();
+                vx[j] = vx[j] + r * cos(fi);
+                vy[j] = vy[j] + r * sin(fi);
+
+                double vv = sqrt(vx[j]*vx[j] + vy[j]*vy[j]);
+                if(vv > vmax)
+                {
+                    vx[j] = vx[j] / vv * vmax;
+                    vy[j] = vy[j] / vv * vmax;
+                }
+            }
 
 			if (next_x < 0)
+            {
 				next_x = -next_x;
+                vx[j] = -vx[j];
+            }
 			if (next_x > width)
+            {
 				next_x = width - (next_x - width);
+                vx[j] = -vx[j];
+            }
 			if (next_y < 0)
+            {
 				next_y = -next_y;
+                vy[j] = -vy[j];
+            }
 			if (next_y > height)
+            {
 				next_y = height - (next_y - height);
+                vy[j] = -vy[j];
+            }
 
 			Point next_point(next_x, next_y);
 			text_point.x = next_x - 13;
@@ -239,6 +264,8 @@ int main(int argc, const char** argv)
 			// next point
 			points[j] = next_point;
 		}
+
+        //printf("\n\n");
 
 		// shuffle vector with all points
 		random_shuffle(all_points.begin(), all_points.end());
@@ -263,7 +290,7 @@ int main(int argc, const char** argv)
 		err << " " << double(num_noise_points_out) / number_of_noise_points << endl;
 
 
-        char key = waitKey(1);
+        char key = waitKey(40);
 		if (key == 27)
 		{
 			break;
