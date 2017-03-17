@@ -18,39 +18,45 @@ double Random()
 // params model
 double vmax = 20.0;
 double r0 = 5.0;
-double changeProb = 0.2;
+double changeProb = 0.01;
 
 list<Point> trajectory;
-//list<Point> predict_points;
+list<Point> predict_points;
 list<deque<bool>> tag;
 list<bool> followed_trajectory;
 int M = 4;
 int K = 3;
 int N = 5;
 
-
-void get_good_points(vector<Point> input_points, vector<Point> &output_points)
+// mode = true - with prediction
+void get_good_points(vector<Point> input_points, vector<Point> &output_points, bool mode = true) 
 {
-
 	set<int> employment_indexes; // for 5
 	// 2
 	auto iter_traject = trajectory.begin();
 	auto iter_tag = tag.begin();
 	auto iter_follow = followed_trajectory.begin();
-	//auto iter_predict = predict_points.begin();
+	auto iter_predict = predict_points.begin();
 
 	for ( ; iter_traject != trajectory.end(); )
 	{
 		Point nearest_point;
-		//double min_distance = vmax + 11; // with prediction
-		double min_distance = vmax + 1; // without prediction
+		double min_distance = 0;
+		if(mode)
+			min_distance = vmax + 11; // with prediction
+		else
+			min_distance = vmax + 1; // without prediction
+
 		int index_in_input = 0;
 
 		for (int j = 0; j < input_points.size(); j++)
 		{
-			
-			//double dist = norm(input_points[j] - *iter_predict); // with prediction
-			double dist = norm(input_points[j] - *iter_traject); // without prediction
+			double dist = 0;
+			if(mode)
+				dist = norm(input_points[j] - *iter_predict); // with prediction
+			else
+				dist = norm(input_points[j] - *iter_traject); // without prediction
+
 			if (dist < min_distance && employment_indexes.find(j) == employment_indexes.end())
 			{
 				min_distance = dist;
@@ -59,23 +65,30 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 			}
 		}
 
-		//if (min_distance > vmax + 10) // with prediction
-		if (min_distance > vmax) //without prediction
+		double space = 0;
+		if (mode)
+			space = vmax + 10;
+		else
+			space = vmax;
+
+		if (min_distance > space) // with prediction
 		{
 			iter_tag->push_back(false);
 		}
 		else
 		{
 			iter_tag->push_back(true);
-			/*
+			
 			// prediction
-			double dist_predict= norm(nearest_point - *iter_traject);
-			double koef_line = double(nearest_point.y - iter_traject->y) / (nearest_point.x - iter_traject->x);
-			double alpha = atan(koef_line);
+			if (mode)
+			{
+				double dist_predict = norm(nearest_point - *iter_traject);
+				double koef_line = double(nearest_point.y - iter_traject->y) / (nearest_point.x - iter_traject->x);
+				double alpha = atan(koef_line);
 
-			iter_predict->x = nearest_point.x + dist_predict / 2 * cos(alpha);
-			iter_predict->y = nearest_point.y + dist_predict / 2 * sin(alpha);
-			*/
+				iter_predict->x = nearest_point.x + dist_predict / 2 * cos(alpha);
+				iter_predict->y = nearest_point.y + dist_predict / 2 * sin(alpha);
+			}
 			*iter_traject = nearest_point;
 			employment_indexes.insert(index_in_input);
 		}
@@ -102,14 +115,14 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 				iter_follow = followed_trajectory.erase(iter_follow);
 				iter_traject = trajectory.erase(iter_traject);
 				iter_tag = tag.erase(iter_tag); 
-				//iter_predict = predict_points.erase(iter_predict);
+				iter_predict = predict_points.erase(iter_predict);
 			}
 			else
 			{
 				iter_traject++;
 				iter_tag++;
 				iter_follow++;
-				//iter_predict++;
+				iter_predict++;
 			}
 		}
 		else
@@ -117,7 +130,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 			iter_traject++;
 			iter_tag++;
 			iter_follow++;
-			//iter_predict++;
+			iter_predict++;
 		}
 	}
 
@@ -129,7 +142,7 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points)
 		if (finded == employment_indexes.end())
 		{
 			trajectory.push_back(input_points[p]);
-			//predict_points.push_back(input_points[p]);
+			predict_points.push_back(input_points[p]);
 
 			deque<bool> _tag;
 			_tag.push_back(true);
@@ -149,7 +162,7 @@ int main(int argc, const char** argv)
 	int height = 720;
 	Mat frame(height, width, CV_8UC3, Scalar(255, 255, 255));
 	// error
-	string errors_file("errors.txt"); // error file
+	string errors_file("errors1.txt"); // error file
 	ofstream err;
 	err.open(errors_file);
 	
