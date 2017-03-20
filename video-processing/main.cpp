@@ -18,12 +18,12 @@ double Random()
 // params model
 double vmax = 20.0;
 double r0 = 5.0;
-double changeProb = 0.01;
+double changeProb = 0.1;
 
 list<Point> trajectory;
 list<Point> predict_points;
 list<deque<bool>> tag;
-list<bool> followed_trajectory;
+
 int M = 4;
 int K = 3;
 int N = 5;
@@ -35,13 +35,13 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points, b
 	// 2
 	auto iter_traject = trajectory.begin();
 	auto iter_tag = tag.begin();
-	auto iter_follow = followed_trajectory.begin();
 	auto iter_predict = predict_points.begin();
 
 	for ( ; iter_traject != trajectory.end(); )
 	{
 		Point nearest_point;
 		double min_distance = 0;
+
 		if(mode)
 			min_distance = vmax + 11; // with prediction
 		else
@@ -82,13 +82,9 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points, b
 			// prediction
 			if (mode)
 			{
-				double dist_predict = norm(nearest_point - *iter_traject);
-				double koef_line = double(nearest_point.y - iter_traject->y) / (nearest_point.x - iter_traject->x);
-				double alpha = atan(koef_line);
-
-				iter_predict->x = nearest_point.x + dist_predict / 2 * cos(alpha);
-				iter_predict->y = nearest_point.y + dist_predict / 2 * sin(alpha);
+				*iter_predict = nearest_point + (nearest_point - *iter_traject);
 			}
+
 			*iter_traject = nearest_point;
 			employment_indexes.insert(index_in_input);
 		}
@@ -106,13 +102,11 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points, b
 
 			if (number_of_not_empty_points >= M && iter_tag->back() == true)
 			{
-				*iter_follow = true;
 				output_points.push_back(*iter_traject);
 			}
 			// 4
 			if (number_of_not_empty_points < K)
 			{
-				iter_follow = followed_trajectory.erase(iter_follow);
 				iter_traject = trajectory.erase(iter_traject);
 				iter_tag = tag.erase(iter_tag); 
 				iter_predict = predict_points.erase(iter_predict);
@@ -121,7 +115,6 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points, b
 			{
 				iter_traject++;
 				iter_tag++;
-				iter_follow++;
 				iter_predict++;
 			}
 		}
@@ -129,7 +122,6 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points, b
 		{
 			iter_traject++;
 			iter_tag++;
-			iter_follow++;
 			iter_predict++;
 		}
 	}
@@ -147,8 +139,6 @@ void get_good_points(vector<Point> input_points, vector<Point> &output_points, b
 			deque<bool> _tag;
 			_tag.push_back(true);
 			tag.push_back(_tag);
-
-			followed_trajectory.push_back(false);
 		}
 	}
 }
