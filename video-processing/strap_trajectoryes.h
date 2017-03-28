@@ -18,7 +18,6 @@ public:
 									 // 2
 		auto iter_traject = trajectory.begin();
 		auto iter_tag = tag.begin();
-		auto iter_predict = predict_points.begin();
 
 		for (; iter_traject != trajectory.end(); )
 		{
@@ -72,20 +71,17 @@ public:
 				{
 					iter_traject = trajectory.erase(iter_traject);
 					iter_tag = tag.erase(iter_tag);
-					iter_predict = predict_points.erase(iter_predict);
 				}
 				else
 				{
 					iter_traject++;
 					iter_tag++;
-					iter_predict++;
 				}
 			}
 			else
 			{
 				iter_traject++;
 				iter_tag++;
-				iter_predict++;
 			}
 		}
 
@@ -97,7 +93,6 @@ public:
 			if (finded == employment_indexes.end())
 			{
 				trajectory.push_back(input_points[p]);
-				predict_points.push_back(input_points[p]);
 
 				deque<bool> _tag;
 				_tag.push_back(true);
