@@ -1,13 +1,9 @@
 #include <fstream>
-#include <numeric>
-#include "opencv2/opencv.hpp"
+#include "strap_trajectoryes.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-
-using namespace cv;
-using namespace std;
 
 // rand from 0 to 1
 double Random()
@@ -19,129 +15,6 @@ double Random()
 double vmax = 20.0;
 double r0 = 5.0;
 double changeProb = 0.1;
-
-list<Point> trajectory;
-list<Point> predict_points;
-list<deque<bool>> tag;
-
-int M = 4;
-int K = 3;
-int N = 5;
-
-// mode = true - with prediction
-void get_good_points(vector<Point> input_points, vector<Point> &output_points, bool mode = true) 
-{
-	set<int> employment_indexes; // for 5
-	// 2
-	auto iter_traject = trajectory.begin();
-	auto iter_tag = tag.begin();
-	auto iter_predict = predict_points.begin();
-
-	for ( ; iter_traject != trajectory.end(); )
-	{
-		Point nearest_point;
-		double min_distance = 0;
-
-		if(mode)
-			min_distance = vmax + 11; // with prediction
-		else
-			min_distance = vmax + 1; // without prediction
-
-		int index_in_input = 0;
-
-		for (int j = 0; j < input_points.size(); j++)
-		{
-			double dist = 0;
-			if(mode)
-				dist = norm(input_points[j] - *iter_predict); // with prediction
-			else
-				dist = norm(input_points[j] - *iter_traject); // without prediction
-
-			if (dist < min_distance && employment_indexes.find(j) == employment_indexes.end())
-			{
-				min_distance = dist;
-				nearest_point = input_points[j];
-				index_in_input = j;
-			}
-		}
-
-		double space = 0;
-		if (mode)
-			space = vmax + 10;
-		else
-			space = vmax;
-
-		if (min_distance > space) // with prediction
-		{
-			iter_tag->push_back(false);
-		}
-		else
-		{
-			iter_tag->push_back(true);
-			
-			// prediction
-			if (mode)
-			{
-				*iter_predict = nearest_point + (nearest_point - *iter_traject);
-			}
-
-			*iter_traject = nearest_point;
-			employment_indexes.insert(index_in_input);
-		}
-
-		// save last N points
-		if (iter_tag->size() > N)
-		{
-			iter_tag->pop_front();
-		}
-		
-		// 3
-		if (iter_tag->size() == N)
-		{
-			int number_of_not_empty_points = std::accumulate(iter_tag->begin(), iter_tag->end(), 0);
-
-			if (number_of_not_empty_points >= M && iter_tag->back() == true)
-			{
-				output_points.push_back(*iter_traject);
-			}
-			// 4
-			if (number_of_not_empty_points < K)
-			{
-				iter_traject = trajectory.erase(iter_traject);
-				iter_tag = tag.erase(iter_tag); 
-				iter_predict = predict_points.erase(iter_predict);
-			}
-			else
-			{
-				iter_traject++;
-				iter_tag++;
-				iter_predict++;
-			}
-		}
-		else
-		{
-			iter_traject++;
-			iter_tag++;
-			iter_predict++;
-		}
-	}
-
-	// 5 and 1
-		
-	for (int p = 0; p < input_points.size(); p++)
-	{
-		auto finded = employment_indexes.find(p);
-		if (finded == employment_indexes.end())
-		{
-			trajectory.push_back(input_points[p]);
-			predict_points.push_back(input_points[p]);
-
-			deque<bool> _tag;
-			_tag.push_back(true);
-			tag.push_back(_tag);
-		}
-	}
-}
 
 
 int main(int argc, const char** argv)
@@ -172,12 +45,11 @@ int main(int argc, const char** argv)
         double fi = 2 * M_PI * Random();
 		vx.push_back(r * cos(fi));
 		vy.push_back(r * sin(fi));
-		// last_angle.push_back(0.0);
-        //printf("[%g,%g]",r,fi);
 	}
 	
     int number_of_noise_points = 100;
-
+	// Strap trajectoryes
+	Strap_trajectoryes strapper;
 
 	for(int i = 0; ;i++)
 	{
@@ -204,13 +76,6 @@ int main(int argc, const char** argv)
 
 			//Point text_point(points[j].x, points[j].y);
 			putText(frame, "+", text_point, FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255));
-			//int length_of_step = rand() % 30 + 1;
-            //double angle = ((rand() % 181) - 90) / 45.0 * atan(1.0);
-			//double sum_angle = last_angle[j] + angle;
-			//last_angle[j] = sum_angle;
-
-			//int next_x = points[j].x + length_of_step * cos(sum_angle);
-			//int next_y = points[j].y + length_of_step * sin(sum_angle);
 
 			int next_x = points[j].x + vx[j];
 			int next_y = points[j].y + vy[j];
@@ -230,7 +95,6 @@ int main(int argc, const char** argv)
                     vx[j] = vx[j] / vv * vmax;
                     vy[j] = vy[j] / vv * vmax;
                 }
-				
             }
 
 			if (next_x < 0)
@@ -266,13 +130,13 @@ int main(int argc, const char** argv)
 			points[j] = next_point;
 		}
 
-        //printf("\n\n");
 
 		// shuffle vector with all points
-		random_shuffle(all_points.begin(), all_points.end());
+		std::random_shuffle(all_points.begin(), all_points.end());
 
 		// implemented
-		get_good_points(all_points, good_points_out);
+		strapper.get_good_points_with_prediction(all_points, good_points_out);
+		//strapper.get_good_points(all_points, good_points_out);
 		
 		// errors
 		int num_good_points_out = 0;
@@ -294,8 +158,8 @@ int main(int argc, const char** argv)
         char key = waitKey(1);
 		if (key == 27)
 		{
-			break;
 			err.close();
+			break;
 		}
 		imshow("frame", frame);
 
