@@ -18,12 +18,21 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="strap_trajectoryes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="strap_Walds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="strap_trajectoryes.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="strap_Walds.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

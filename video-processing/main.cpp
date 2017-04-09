@@ -1,10 +1,6 @@
 #include <fstream>
 #include "strap_trajectoryes.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-
 // rand from 0 to 1
 double Random()
 {
@@ -134,7 +130,7 @@ int main(int argc, const char** argv)
 		// shuffle vector with all points
 		std::random_shuffle(all_points.begin(), all_points.end());
 
-		// implemented
+		// algorithms
 		strapper.get_good_points_with_prediction(all_points, good_points_out);
 		//strapper.get_good_points(all_points, good_points_out);
 		
