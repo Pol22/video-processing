@@ -1,36 +1,28 @@
 #pragma once
-#include <vector>
-#include <list>
-#include <numeric>
-#include "opencv2/opencv.hpp"
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-using namespace std;
-using namespace cv;
+#include "strap_trajectoryes.h"
 
 class Walds_strapper
 {
 public:
-	Walds_strapper(int num_good_points, int num_all_points) 
+	Walds_strapper(int num_noise_points) 
 	{
-		num_all = num_all_points; // 130
-		p_A = double(num_good_points) / num_all; // 3/13
-		p_B = 1 - p_A; // 10/13
+		bad_prob = double(num_noise_points) / width / height;
 	};
 	void get_good_points(vector<Point> input_points, vector<Point> &output_points);
 
 private:
-	double p_A;
-	double p_B;
-	int num_all;
-	double square = 1280 * 720;
-	// threshold
-	double prob_threshold = 10.0;
-
+	int width = 1280;
+	int height = 720;
 	double vmax = 20.0;
+	double sigma = vmax / 3;
+	double bad_prob;
+
+	// thresholds
+	double low_threshold = 10.0; // порог сброса траетории
+	double high_threshold = 30.0; // порог принятия траетории
+
 	list<Point> trajectory;
+	list<deque<double>> traj_probs;
 	list<Point> predict_points;
-	list<double> probs;
+	int N = 5;
 };

@@ -10,7 +10,7 @@ void Strap_trajectoryes::get_good_points(vector<Point> input_points, vector<Poin
 	for (; iter_traject != trajectory.end(); )
 	{
 		Point nearest_point;
-		double min_distance = vmax + 1; // without prediction
+		double min_distance = vmax; // without prediction
 
 		int index_in_input = 0;
 
@@ -26,9 +26,7 @@ void Strap_trajectoryes::get_good_points(vector<Point> input_points, vector<Poin
 			}
 		}
 
-		double space = vmax + 2;
-
-		if (min_distance > space) // with prediction
+		if (min_distance > vmax) // with prediction
 		{
 			iter_tag->push_back(false);
 		}
@@ -100,9 +98,9 @@ void Strap_trajectoryes::get_good_points_with_prediction(vector<Point> input_poi
 	for (; iter_traject != trajectory.end(); )
 	{
 		Point nearest_point;
-		double min_distance = vmax + 11; // with prediction
+		double min_distance = vmax + 3;
 
-		int index_in_input = 0;
+		int index_in_input = -1;
 
 		for (int j = 0; j < input_points.size(); j++)
 		{
@@ -116,9 +114,7 @@ void Strap_trajectoryes::get_good_points_with_prediction(vector<Point> input_poi
 			}
 		}
 
-		double space = vmax + 10;
-
-		if (min_distance > space)
+		if (min_distance > vmax)
 		{
 			iter_tag->push_back(false);
 		}
