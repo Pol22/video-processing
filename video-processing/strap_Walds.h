@@ -18,8 +18,8 @@ private:
 	double bad_prob;
 
 	// thresholds
-	double low_threshold = 10.0; // порог сброса траетории
-	double high_threshold = 30.0; // порог принятия траетории
+	double low_threshold = 60.0; // порог сброса траетории
+	double high_threshold = 130.0; // порог принятия траетории
 
 	list<Point> trajectory;
 	list<deque<double>> traj_probs;

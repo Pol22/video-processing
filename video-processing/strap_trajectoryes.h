@@ -15,19 +15,19 @@ class Strap_trajectoryes
 public:
 	Strap_trajectoryes(){};
 
-	void get_good_points(vector<Point> input_points, vector<Point> &output_points);
+	void get_good_points(Mat input_points, vector<Point> &output_points);
 
-	void get_good_points_with_prediction(vector<Point> input_points, vector<Point> &output_points);
+	void get_good_points_with_prediction(Mat input_points, vector<Point> &output_points);
 
 private:
 	int width = 1280;
 	int height = 720;
-	double vmax = 20.0;
-	list<Point> trajectory;
-	list<Point> predict_points;
+	double vmax = 50.0;
+	list<Point2f> trajectory;
+	list<Point2f> predict_points;
 	list<deque<bool>> tag;
 	// params
-	int M = 4;
-	int K = 3;
-	int N = 5;
+	int M = 8;
+	int K = 7;
+	int N = 10;
 };

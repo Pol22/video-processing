@@ -1,5 +1,9 @@
 #include <fstream>
+#include <chrono>
 #include "strap_Walds.h"
+#include <opencv2\imgproc\imgproc.hpp>
+#include <opencv2\core\core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 // rand from 0 to 1
 double Random()
@@ -166,7 +170,81 @@ int main1()
 	return 0;
 }
 
+int main2()
+{
+	VideoCapture cap("768x576.avi");
+	//VideoCapture cap("video1.avi");
+	//VideoCapture cap("video2.avi");
+	//VideoCapture cap("Fast moving cars.mp4");
+	
+	Strap_trajectoryes strapper;
+	//Walds_strapper strapper(100);
+
+	Mat frame, gray;
+
+	auto end = chrono::system_clock::now();
+	auto start = chrono::system_clock::now();
+
+	Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2(1000, 20.0, false);
+	Mat fgMask;
+
+	while (1 > 0)
+	{
+		cap >> frame;
+		if (frame.empty())
+			break;
+		
+		cvtColor(frame, gray, COLOR_BGR2GRAY);
+		GaussianBlur(gray, gray, Size(7, 7), 3);
+		bg->apply(gray, fgMask);
+		erode(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(5, 5)));
+		dilate(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(17, 17)));
+
+		Mat labels;
+		int N = connectedComponents(fgMask, labels);
+		Mat input;
+		
+		for (int i = 1; i < N; i++)
+		{
+			Mat bound = labels == i;
+			Rect rect = boundingRect(bound);
+			input.push_back(Point2f(rect.x, rect.y));
+
+			//rectangle(frame, rect, Scalar(0, 255, 0), 2);
+		}
+		
+		vector<Point> output;
+		strapper.get_good_points_with_prediction(input, output);
+		//strapper.get_good_points(input, output);
+
+		for (int i = 1; i < N; i++)
+		{
+			Mat bound = labels == i;
+			Rect rect = boundingRect(bound);
+			auto finded = find(output.begin(), output.end(), Point(rect.x, rect.y));
+			if (finded != output.end())
+				rectangle(frame, rect, Scalar(0, 255, 0), 2);
+		}
+		end = chrono::system_clock::now();
+		double fps = double(1000000000) / std::chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+		putText(frame, string("fps:") + to_string(int(fps)), Point(0, 17), CV_FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255));
+		imshow("video", frame);
+		imshow("mask", fgMask);
+		
+		int k = waitKey(100);
+		if (k == 27)
+			break;
+		start = chrono::system_clock::now();
+	}
+
+	bg->clear();
+	destroyAllWindows();
+
+	return 0;
+}
+
 int main(int argc, const char** argv)
 {
-	return main1();
+	//return main1();
+	return main2();
 }

@@ -1,6 +1,6 @@
 #include "strap_trajectoryes.h"
 
-void Strap_trajectoryes::get_good_points(vector<Point> input_points, vector<Point> &output_points)
+void Strap_trajectoryes::get_good_points(Mat input_points, vector<Point> &output_points)
 {
 	set<int> employment_indexes; // for 5
 								 // 2
@@ -12,21 +12,21 @@ void Strap_trajectoryes::get_good_points(vector<Point> input_points, vector<Poin
 		Point nearest_point;
 		double min_distance = vmax; // without prediction
 
-		int index_in_input = 0;
+		int index_in_input = -1;
 
-		for (int j = 0; j < input_points.size(); j++)
+		for (int j = 0; j < input_points.total(); j++)
 		{
-			double dist = norm(input_points[j] - *iter_traject); // without prediction
+			double dist = norm(input_points.at<Point2f>(j) - *iter_traject); // without prediction
 
 			if (dist < min_distance && employment_indexes.find(j) == employment_indexes.end())
 			{
 				min_distance = dist;
-				nearest_point = input_points[j];
+				nearest_point = input_points.at<Point2f>(j);
 				index_in_input = j;
 			}
 		}
 
-		if (min_distance > vmax) // with prediction
+		if (index_in_input == -1) // with prediction
 		{
 			iter_tag->push_back(false);
 		}
@@ -73,12 +73,13 @@ void Strap_trajectoryes::get_good_points(vector<Point> input_points, vector<Poin
 
 	// 5 and 1
 
-	for (int p = 0; p < input_points.size(); p++)
+	for (int p = 0; p < input_points.total(); p++)
 	{
 		auto finded = employment_indexes.find(p);
 		if (finded == employment_indexes.end())
 		{
-			trajectory.push_back(input_points[p]);
+			trajectory.push_back(input_points.at<Point2f>(p));
+			predict_points.push_back(input_points.at<Point2f>(p));
 
 			deque<bool> _tag;
 			_tag.push_back(true);
@@ -87,7 +88,7 @@ void Strap_trajectoryes::get_good_points(vector<Point> input_points, vector<Poin
 	}
 }
 
-void Strap_trajectoryes::get_good_points_with_prediction(vector<Point> input_points, vector<Point> &output_points)
+void Strap_trajectoryes::get_good_points_with_prediction(Mat input_points, vector<Point> &output_points)
 {
 	set<int> employment_indexes; // for 5
 								 // 2
@@ -97,24 +98,24 @@ void Strap_trajectoryes::get_good_points_with_prediction(vector<Point> input_poi
 
 	for (; iter_traject != trajectory.end(); )
 	{
-		Point nearest_point;
-		double min_distance = vmax + 3;
+		Point2f nearest_point;
+		double min_distance = vmax;
 
 		int index_in_input = -1;
 
-		for (int j = 0; j < input_points.size(); j++)
+		for (int j = 0; j < input_points.total(); j++)
 		{
-			double dist = norm(input_points[j] - *iter_predict); // with prediction
+			double dist = norm(input_points.at<Point2f>(j) - *iter_predict); // with prediction
 
 			if (dist < min_distance && employment_indexes.find(j) == employment_indexes.end())
 			{
 				min_distance = dist;
-				nearest_point = input_points[j];
+				nearest_point = input_points.at<Point2f>(j);
 				index_in_input = j;
 			}
 		}
 
-		if (min_distance > vmax)
+		if (index_in_input == -1)
 		{
 			iter_tag->push_back(false);
 		}
@@ -177,13 +178,13 @@ void Strap_trajectoryes::get_good_points_with_prediction(vector<Point> input_poi
 
 	// 5 and 1
 
-	for (int p = 0; p < input_points.size(); p++)
+	for (int p = 0; p < input_points.total(); p++)
 	{
 		auto finded = employment_indexes.find(p);
 		if (finded == employment_indexes.end())
 		{
-			trajectory.push_back(input_points[p]);
-			predict_points.push_back(input_points[p]);
+			trajectory.push_back(input_points.at<Point2f>(p));
+			predict_points.push_back(input_points.at<Point2f>(p));
 
 			deque<bool> _tag;
 			_tag.push_back(true);

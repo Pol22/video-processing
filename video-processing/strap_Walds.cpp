@@ -58,7 +58,7 @@ void Walds_strapper::get_good_points(vector<Point> input_points, vector<Point> &
 		if (iter_probs->size() == N)
 		{
 			double sum_true_ratio = std::accumulate(iter_probs->begin(), iter_probs->end(), 0.0);
-
+			
 			if (sum_true_ratio > high_threshold)
 			{
 				output_points.push_back(*iter_traject);
