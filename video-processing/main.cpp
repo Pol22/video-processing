@@ -185,7 +185,7 @@ int main2()
 	auto end = chrono::system_clock::now();
 	auto start = chrono::system_clock::now();
 
-	Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2(1000, 20.0, false);
+	Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2(500, 25.0, false);
 	Mat fgMask;
 
 	while (1 > 0)
@@ -198,33 +198,36 @@ int main2()
 		GaussianBlur(gray, gray, Size(7, 7), 3);
 		bg->apply(gray, fgMask);
 		erode(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(5, 5)));
-		dilate(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(17, 17)));
+		dilate(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(15, 15)));
 
-		Mat labels;
-		int N = connectedComponents(fgMask, labels);
+		// Find contours   
+		vector<vector<Point> > contours;
+
+		findContours(fgMask, contours, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+		
 		Mat input;
 		
-		for (int i = 1; i < N; i++)
+		for (int i = 0; i < contours.size(); i++)
 		{
-			Mat bound = labels == i;
-			Rect rect = boundingRect(bound);
+			Rect rect = boundingRect(contours[i]);
 			input.push_back(Point2f(rect.x, rect.y));
 
 			//rectangle(frame, rect, Scalar(0, 255, 0), 2);
 		}
+
 		
 		vector<Point> output;
 		strapper.get_good_points_with_prediction(input, output);
 		//strapper.get_good_points(input, output);
 
-		for (int i = 1; i < N; i++)
+		for (int i = 0; i < contours.size(); i++)
 		{
-			Mat bound = labels == i;
-			Rect rect = boundingRect(bound);
+			Rect rect = boundingRect(contours[i]);
 			auto finded = find(output.begin(), output.end(), Point(rect.x, rect.y));
 			if (finded != output.end())
 				rectangle(frame, rect, Scalar(0, 255, 0), 2);
 		}
+		
 		end = chrono::system_clock::now();
 		double fps = double(1000000000) / std::chrono::duration_cast<chrono::nanoseconds>(end - start).count();
 		putText(frame, string("fps:") + to_string(int(fps)), Point(0, 17), CV_FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255));
