@@ -236,7 +236,7 @@ int main2()
 		imshow("video", frame);
 		imshow("mask", fgMask);
 		
-		int k = waitKey(100);
+        char k = waitKey(100);
 		if (k == 27)
 			break;
 		start = chrono::system_clock::now();
