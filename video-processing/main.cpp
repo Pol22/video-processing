@@ -185,7 +185,8 @@ int main2()
 	auto end = chrono::system_clock::now();
 	auto start = chrono::system_clock::now();
 
-	Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2(500, 25.0, false);
+    //Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2(500, 25.0, false);
+    BackgroundSubtractorMOG2 bg(500, 25.0, false);
 	Mat fgMask;
 
 	while (1 > 0)
@@ -196,7 +197,8 @@ int main2()
 		
 		cvtColor(frame, gray, COLOR_BGR2GRAY);
 		GaussianBlur(gray, gray, Size(7, 7), 3);
-		bg->apply(gray, fgMask);
+        //bg->apply(gray, fgMask);
+        bg(gray, fgMask);
 		erode(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(5, 5)));
 		dilate(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(15, 15)));
 
@@ -240,7 +242,7 @@ int main2()
 		start = chrono::system_clock::now();
 	}
 
-	bg->clear();
+    //bg->clear();
 	destroyAllWindows();
 
 	return 0;
