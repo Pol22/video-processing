@@ -28,14 +28,15 @@ int main1()
 	ofstream err;
 	err.open(errors_file);
 
-	vector<Point> points;
+	vector<Point2f> points;
 	vector<double> vx;
 	vector<double> vy;
 	vector<Point> good_points;
 	vector<Point> good_points_out;
 	// vector<double> last_angle;
-	vector<Point> all_points;
-
+	Mat all_points;
+	VideoWriter outputVideo;
+	outputVideo.open("example.avi", -1, 30, Size(width, height));
 
 	for (int k = 0; k < number_of_targets; k++)
 	{
@@ -48,19 +49,19 @@ int main1()
 
 	int number_of_noise_points = 100;
 	// Strap trajectoryes
-	//Strap_trajectoryes strapper;
-	Walds_strapper strapper(number_of_noise_points);
+	Strap_trajectoryes strapper;
+	//Walds_strapper strapper(number_of_noise_points);
 
 	for (int i = 0; ; i++)
 	{
 		good_points.clear();
-		all_points.clear();
+		all_points.release();
 		good_points_out.clear();
 		frame = Scalar(255, 255, 255);
 
 		for (int p = 0; p < number_of_noise_points; p++)
 		{
-			Point noise_point(rand() % width, rand() % height);
+			Point2f noise_point(rand() % width, rand() % height);
 
 			all_points.push_back(noise_point);
 
@@ -132,7 +133,7 @@ int main1()
 
 
 		// shuffle vector with all points
-		std::random_shuffle(all_points.begin(), all_points.end());
+		randShuffle(all_points);
 
 		// algorithms
 		//strapper.get_good_points_with_prediction(all_points, good_points_out);
@@ -162,7 +163,8 @@ int main1()
 			break;
 		}
 		imshow("frame", frame);
-
+		//imwrite("example.jpg", frame);
+		outputVideo << frame;
 	}
 
 	cvDestroyAllWindows();
@@ -185,8 +187,8 @@ int main2()
 	auto end = chrono::system_clock::now();
 	auto start = chrono::system_clock::now();
 
-    //Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2(500, 25.0, false);
-    BackgroundSubtractorMOG2 bg(500, 25.0, false);
+    Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2(500, 25.0, false);
+    //BackgroundSubtractorMOG2 bg(500, 25.0, false);
 	Mat fgMask;
 
 	while (1 > 0)
@@ -197,10 +199,10 @@ int main2()
 		
 		cvtColor(frame, gray, COLOR_BGR2GRAY);
 		GaussianBlur(gray, gray, Size(7, 7), 3);
-        //bg->apply(gray, fgMask);
-        bg(gray, fgMask);
+        bg->apply(gray, fgMask);
+        //bg(gray, fgMask);
 		erode(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(5, 5)));
-		dilate(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(15, 15)));
+		dilate(fgMask, fgMask, getStructuringElement(MORPH_RECT, Size(5, 5)), Point(-1, -1), 5);
 
 		// Find contours   
 		vector<vector<Point> > contours;
@@ -242,7 +244,8 @@ int main2()
 		start = chrono::system_clock::now();
 	}
 
-    //bg->clear();
+    bg->clear();
+	//
 	destroyAllWindows();
 
 	return 0;
@@ -250,6 +253,6 @@ int main2()
 
 int main(int argc, const char** argv)
 {
-	//return main1();
-	return main2();
+	return main1();
+	//return main2();
 }

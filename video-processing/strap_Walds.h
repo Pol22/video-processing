@@ -8,7 +8,7 @@ public:
 	{
 		bad_prob = double(num_noise_points) / width / height;
 	};
-	void get_good_points(vector<Point> input_points, vector<Point> &output_points);
+	void get_good_points(Mat input_points, vector<Point> &output_points);
 
 private:
 	int width = 1280;
@@ -18,11 +18,11 @@ private:
 	double bad_prob;
 
 	// thresholds
-	double low_threshold = 60.0; // порог сброса траетории
+	double low_threshold = 100.0; // порог сброса траетории
 	double high_threshold = 130.0; // порог принятия траетории
 
-	list<Point> trajectory;
+	list<Point2f> trajectory;
 	list<deque<double>> traj_probs;
-	list<Point> predict_points;
+	list<Point2f> predict_points;
 	int N = 5;
 };

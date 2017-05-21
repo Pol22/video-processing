@@ -1,6 +1,6 @@
 #include "strap_Walds.h"
 
-void Walds_strapper::get_good_points(vector<Point> input_points, vector<Point> &output_points)
+void Walds_strapper::get_good_points(Mat input_points, vector<Point> &output_points)
 {
 	set<int> employment_indexes;
 
@@ -10,19 +10,19 @@ void Walds_strapper::get_good_points(vector<Point> input_points, vector<Point> &
 
 	for (; iter_traject != trajectory.end(); )
 	{
-		Point nearest_point;
+		Point2f nearest_point;
 		double min_distance = vmax * 10;
 
 		int index_in_input = -1;
 
-		for (int j = 0; j < input_points.size(); j++)
+		for (int j = 0; j < input_points.total(); j++)
 		{
-			double dist = norm(input_points[j] - *iter_predict);
+			double dist = norm(input_points.at<Point2f>(j) - *iter_predict);
 
 			if (dist < min_distance && employment_indexes.find(j) == employment_indexes.end())
 			{
 				min_distance = dist;
-				nearest_point = input_points[j];
+				nearest_point = input_points.at<Point2f>(j);
 				index_in_input = j;
 			}
 		}
@@ -85,13 +85,13 @@ void Walds_strapper::get_good_points(vector<Point> input_points, vector<Point> &
 		}
 	}
 
-	for (int p = 0; p < input_points.size(); p++)
+	for (int p = 0; p < input_points.total(); p++)
 	{
 		auto finded = employment_indexes.find(p);
 		if (finded == employment_indexes.end())
 		{
-			trajectory.push_back(input_points[p]);
-			predict_points.push_back(input_points[p]);
+			trajectory.push_back(input_points.at<Point2f>(p));
+			predict_points.push_back(input_points.at<Point2f>(p));
 			
 			deque<double> _probs;
 			double good_prob = 1 / (sigma * sqrt(2 * M_PI));
